@@ -1,0 +1,68 @@
+{% load static %}
+<html>
+    <head>
+        <title>CSES Membership Form</title>
+        <style>
+            body {
+                text-align: center;
+            }
+            /* Shared Button Styles */
+            .btn {
+                display: inline-block;
+                padding: 0.75em 1.5em;
+                font-size: 1rem;
+                font-weight: 600;
+                border-radius: 0.5rem;
+                text-decoration: none;
+                color: white;
+                border: none;
+                cursor: pointer;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+                transition: background-color 0.2s ease, transform 0.1s ease;
+                font-family: "Inter", "Helvetica Neue", sans-serif;
+            }
+
+            /* Academic: Carleton Red */
+            .cses-academic {
+                background-color: #E91C24;
+            }
+            .cses-academic:hover {
+                background-color: #C2171F;
+                transform: translateY(-1px);
+            }
+
+            /* Professional: Clean Gray */
+            .cses-professional {
+                background-color: #5f6368; /* modern neutral gray */
+            }
+            .cses-professional:hover {
+                background-color: #444;
+                transform: translateY(-1px);
+            }
+
+            /* Social: Royal Purple */
+            .cses-social {
+                background-color: #6a1b9a;
+            }
+            .cses-social:hover {
+                background-color: #4a148c;
+                transform: translateY(-1px);
+            }
+
+            /* Focus Style (Accessible) */
+            .btn:focus-visible {
+                outline: 3px solid #ffffff;
+                outline-offset: 2px;
+            }
+
+        </style>
+    </head>
+    <script>
+        </script>
+    <body>
+        <img src="{% static 'logo.avif' %}"/>
+        <br>
+        <a class="btn cses-professional" href="{% url 'signin' %}">Sign In/Up</a>
+
+    </body>
+</html>
