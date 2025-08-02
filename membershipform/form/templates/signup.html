@@ -1,7 +1,7 @@
 {% load static %}
 <html>
     <head>
-        <title>CSES Membership Site</title>
+        <title>CSES Membership Home</title>
         <style>
             body {
                 text-align: center;
@@ -20,6 +20,9 @@
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
                 transition: background-color 0.2s ease, transform 0.1s ease;
                 font-family: "Inter", "Helvetica Neue", sans-serif;
+            }
+            .error {
+                color: red;
             }
 
             /* Academic: Carleton Red */
@@ -60,11 +63,17 @@
     <script>
         </script>
     <body>
+        <a class="btn cses-professional" href="{% url 'home' %}">Back</a>
+        <br>
         <img src="{% static 'logo.avif' %}"/>
         <br>
-        <h1>Membership Management System</h1>
-        <br>
-        <a class="btn cses-professional" href="{% url 'signin' %}">Sign In/Up</a>
-
+        <form method="POST">
+            {% csrf_token %}
+            {{ form }}
+            <button>Sign Up</button>
+        </form>
+        {% if invalid %}
+        <h1 class="error">Invalid Input</h1>
+        {% endif %}
     </body>
 </html>

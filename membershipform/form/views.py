@@ -5,13 +5,39 @@ import requests
 import msal
 import uuid
 import re
-from .models import CarletonEmail
+from .models import CarletonEmail, Membership, MembershipUpdateHistory
 from django.contrib.auth.models import User
 from django.contrib.auth import login
-
+from django.contrib.auth.decorators import login_required
+from .forms import MembershipForm
+from datetime import date
 
 def index(request):
     return render(request, "index.html")
+
+def get_membership(user) -> Membership:
+    memberships = Membership.objects.filter(user=user)
+    if len(memberships) == 0:
+        return None
+    for m in memberships:
+        if not m.expired:
+            return m
+    return None
+
+def is_member(user) -> bool:
+    memberships = Membership.objects.filter(user=user)
+    if len(memberships) == 0:
+        return False
+    for m in memberships:
+        if not m.expired:
+            return True
+    return False
+
+def has_revoked_membership(user):
+    m = get_membership(user)
+    if m is None:
+        return False
+    return m.revoked
 
 def signin(request):
     if request.user.is_authenticated:
@@ -58,5 +84,66 @@ def callback(request):
     cmail.save()
     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect("/home")
+
+@login_required
 def home(request):
-    pass
+    return render(request, "home.html", {"member": is_member(request.user)})
+
+def get_academic_year(today=None):
+    if today is None:
+        today = date.today()
+    # If before May 1st, academic year is previous calendar year
+    if today < date(today.year, 5, 1):
+        return today.year - 1
+    else:
+        return today.year
+
+@login_required
+def member_signup(request):
+    if has_revoked_membership(request.user):
+        return HttpResponse("You cannot sign up for a membership at this time.")
+    if request.method == "POST":
+        form = MembershipForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data["name"]
+            address = form.cleaned_data["address"]
+            stunum = form.cleaned_data["student_number"]
+            program = form.cleaned_data["program"]
+            engineer = form.cleaned_data["engineer"]
+            
+            if not is_member(request.user):
+                if not engineer:
+                    return HttpResponse("Unfortunately, eng at heart's are unable to sign up for memberships")
+                year = get_academic_year()
+                membership = Membership(user=request.user, name=name, address=address,
+                                        student_number=stunum, program=program,
+                                        engineer=engineer, year=year)
+            else:
+                membership = get_membership(request.user)
+                membership.name = name
+                membership.address = address
+                membership.student_number = stunum
+                membership.program = program
+                membership.engineer = engineer
+            membership.save()
+            history_change = MembershipUpdateHistory(membership=membership, change_user=request.user,
+                                                     new_name=name, new_address=address,
+                                                     new_student_number=stunum, new_program=program,
+                                                     new_engineer=engineer, new_revoked=membership.revoked,
+                                                     new_paid=membership.paid)
+            history_change.save()
+            return redirect("/home")
+        return render(request, "signup.html", {"form": form, "invalid": True})
+    else:
+        if not is_member(request.user):
+            form = MembershipForm(initial={"name": request.user.first_name + " " + request.user.last_name})
+        else:
+            m = get_membership(request.user)
+            form = MembershipForm(initial={"name": m.name, "address": m.address,
+                                  "student_number": m.student_number, "program": m.program,
+                                  "engineer": m.engineer})
+        return render(request, "signup.html", {"form": form})
+
+@login_required
+def member_history(request):
+    return render(request, "history.html", {"memberships": Membership.objects.filter(user=request.user)})

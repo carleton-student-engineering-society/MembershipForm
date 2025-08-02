@@ -1,7 +1,7 @@
 {% load static %}
 <html>
     <head>
-        <title>CSES Membership Site</title>
+        <title>CSES Membership Home</title>
         <style>
             body {
                 text-align: center;
@@ -62,9 +62,14 @@
     <body>
         <img src="{% static 'logo.avif' %}"/>
         <br>
-        <h1>Membership Management System</h1>
-        <br>
-        <a class="btn cses-professional" href="{% url 'signin' %}">Sign In/Up</a>
-
+        {% if not member %}
+        <a class="btn cses-professional" href="{% url 'member_signup' %}">Membership Sign Up</a>
+        {% else %}
+        <a class="btn cses-professional" href="{% url 'member_signup' %}">Edit membership</a>
+        {% endif %}
+        <a class="btn cses-professional" href="{% url 'member_history' %}">Membership history</a>
+        {% if request.user.is_staff %}
+        <a class="btn cses-professional" href="/admin">Admin</a>
+        {% endif %}
     </body>
 </html>
